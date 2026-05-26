@@ -6,8 +6,8 @@
 
 - 早餐商品分類
 - 飲料分類
-- 商品圖片
-- 購物車
+- 商品圖片顯示
+- 購物車功能
 - 結帳功能
 - JavaFX GUI
 - CSS 美化介面
@@ -19,6 +19,11 @@
 - Maven
 - CSS
 - GitHub
+
+## 輔助使用AI
+CHATGPT 
+Gemini
+
 
 ## 作者
 
