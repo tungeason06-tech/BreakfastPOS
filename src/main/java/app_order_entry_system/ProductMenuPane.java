@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import data_type.Product;
+import db.ProductDAO;
 import file_read_write.ProductFileReader;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -22,9 +23,9 @@ class ProductMenuPane extends VBox {
     private OrderPane orderPane; // 注入 OrderPane 實例以便未來加入購物車功能
 
     private final String[] categories = {
-    "早餐",
-    "飲料"
-};
+            "早餐",
+            "飲料"
+    };
     private final Map<String, TilePane> menus = new TreeMap<>();
     private final VBox menuContainerPane = new VBox();
 
@@ -63,8 +64,8 @@ class ProductMenuPane extends VBox {
 
     // V3 修改重點在這裡：這是一個更厲害的產品按鈕製造機，會自動幫產品穿上圖片外衣！
     private TilePane getProductCategoryMenu(String category) {
-        Map<String, Product> product_dict = ProductFileReader.readProduct();
-
+        ProductDAO dao = new ProductDAO();
+        Map<String, Product> product_dict = dao.getProducts();
         TilePane category_menu = new TilePane();
         category_menu.setVgap(10);
         category_menu.setHgap(10);
