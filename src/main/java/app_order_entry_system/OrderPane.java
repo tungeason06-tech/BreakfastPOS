@@ -7,6 +7,7 @@ import data_type.OrderDetail;
 import data_type.OrderDetailEntry;
 import data_type.Product;
 import data_type.SaleOrder;
+import db.OrderEntryDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -25,7 +26,7 @@ import javafx.util.converter.IntegerStringConverter;
 // 最終版：包含完整功能 (資料庫操作與表格編輯)
 // =========================================================================
 class OrderPane extends VBox {
-
+    private OrderEntryDAO orderEntryDao = new OrderEntryDAO();
     // 用於儲存訂單項目的可觀察列表，以便與 TableView 進行綁定和自動更新
     private final ObservableList<OrderDetailEntry> orderCart = FXCollections.observableArrayList();
 
@@ -249,7 +250,7 @@ class OrderPane extends VBox {
             saleOrder.setCustomerId("customer-101"); // 假設使用預設客戶
 
             // 1. 寫入訂單主檔
-            boolean success = file_read_write.OrderFileWriter.insertSaleOrder(saleOrder);
+            boolean success = orderEntryDao.insertSaleOrder(saleOrder);
             // boolean success = odderEntryDao.sertSaleOrder(saleOrder);
 
             // 2. 寫入訂單明細檔
@@ -261,7 +262,7 @@ class OrderPane extends VBox {
                     detail.setQuantity(item.getQuantity());
 
                     // 單筆存入明細
-                    boolean detailSuccess = file_read_write.OrderFileWriter.insertOrderDetail(detail);
+                    boolean detailSuccess = orderEntryDao.insertOrderDetail(detail);
                     // boolean detailSuccess = orderDetailDao.insertOrderDetail(detail);
                     if (!detailSuccess) {
                         System.err.println("儲存訂單明細失敗: " + item.getId());

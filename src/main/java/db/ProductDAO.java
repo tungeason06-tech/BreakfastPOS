@@ -15,7 +15,25 @@ import data_type.Product;
 /**
  * 產品資料表管理類別 專門負責產品資料的 CRUD 操作
  */
-public class ProductDAO {
+public class ProductDAO {public int getTotalSalesAmount() {
+    String sql = "SELECT SUM(total_amount) FROM sale_order";
+
+    try (
+            Connection conn = DBConfig.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery()) {
+
+        if (rs.next()) {
+            return rs.getInt(1);
+        }
+
+    } catch (SQLException e) {
+        System.out.println("取得銷售總額失敗: " + e.getMessage());
+    }
+
+    return 0;
+}
+
 
     /**
      * 插入新產品
@@ -259,6 +277,7 @@ public class ProductDAO {
         //return categories.toArray(new String[0]);
         //return categories.stream().distinct().toArray(String[]::new);
     }
+
 
 
 

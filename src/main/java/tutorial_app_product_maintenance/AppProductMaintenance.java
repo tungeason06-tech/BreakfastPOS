@@ -3,6 +3,7 @@ package tutorial_app_product_maintenance;
 import java.util.List;
 
 import data_type.Product;
+import db.ProductDAO;
 import file_read_write.ProductFileReader;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -29,19 +30,18 @@ import javafx.util.converter.IntegerStringConverter;
 //--------------------
 public class AppProductMaintenance extends Application {
 
-    //--------------------
+    // --------------------
     // 2. 欄位宣告：資料存取、資料清單、狀態顯示
-    //--------------------
-    //private final ProductDAO productDao = new ProductDAO();
-    //private final List<Product> products = productDao.getAllProducts();
-    private final List<Product> products = ProductFileReader.readProductList(); // 從檔案讀取產品資料
+    // --------------------
+    private final ProductDAO productDao = new ProductDAO();
+    private final List<Product> products = productDao.getAllProducts();// 從檔案讀取產品資料
 
     private final ObservableList<Product> product_list = FXCollections.observableList(products);
     private final Label statusLabel = new Label("狀態顯示區");
 
-    //--------------------
+    // --------------------
     // 3. JavaFX應用程式進入點
-    //--------------------
+    // --------------------
     @Override
     public void start(Stage primaryStage) {
         VBox root = getRootPane();
@@ -79,8 +79,7 @@ public class AppProductMaintenance extends Application {
                 lblId, tfId, btnSearchId,
                 lblCategory, tfCategory, btnSearchCategory,
                 lblName, tfName, btnSearchName,
-                btnAll
-        );
+                btnAll);
         return searchPane;
     }
 
@@ -99,8 +98,7 @@ public class AppProductMaintenance extends Application {
         btnUpdate.setOnAction(event -> {
             Product product = table.getSelectionModel().getSelectedItem();
             if (product != null) {
-                //boolean updateSuccess = productDao.update(product);
-                boolean updateSuccess = true; // 模擬更新成功
+                boolean updateSuccess = productDao.update(product); // 模擬更新成功
                 if (updateSuccess) {
                     statusLabel.setText("Updated: " + product.getName());
                     System.out.println("Updated: " + product.getName());
@@ -121,8 +119,7 @@ public class AppProductMaintenance extends Application {
                         product.getName() + " (Copy)",
                         product.getPrice(),
                         product.getImgUrl(),
-                        product.getDescription()
-                );
+                        product.getDescription());
                 product_list.add(duplicatedProduct);
                 statusLabel.setText("Duplicated: " + product.getName() + " (尚未存檔)");
                 System.out.println("Duplicated: " + product.getName() + " (尚未存檔)");
@@ -132,7 +129,7 @@ public class AppProductMaintenance extends Application {
         btnSave.setOnAction(event -> {
             Product product = table.getSelectionModel().getSelectedItem();
             if (product != null) {
-                //productDao.add(product);
+                // productDao.add(product);
                 statusLabel.setText("Save: " + product.getName());
                 System.out.println("Save: " + product.getName());
             }
@@ -147,8 +144,8 @@ public class AppProductMaintenance extends Application {
                 alert.setContentText("確定要刪除這個產品嗎?");
                 alert.showAndWait().ifPresent(response -> {
                     if (response == ButtonType.OK) {
-                        //boolean deleteSuccess = productDao.delete(product.getProductId());
-                        boolean deleteSuccess = true; // 模擬刪除成功
+                        // boolean deleteSuccess = productDao.delete(product.getProductId());
+                        boolean deleteSuccess = productDao.delete(product);
                         if (deleteSuccess) {
                             product_list.remove(product);
                             statusLabel.setText("Deleted: " + product.getName());
@@ -168,9 +165,9 @@ public class AppProductMaintenance extends Application {
         return toolbar;
     }
 
-    //--------------------
+    // --------------------
     // 4. 建立主畫面元件
-    //--------------------
+    // --------------------
     public VBox getRootPane() {
         HBox searchPane = createSearchPane();
         TableView<Product> table = initializeProductTable();
@@ -184,16 +181,16 @@ public class AppProductMaintenance extends Application {
         return vbox;
     }
 
-    //--------------------
+    // --------------------
     // 5. 主程式進入點
-    //--------------------
+    // --------------------
     public static void main(String[] args) {
         launch(args);
     }
 
-    //--------------------
+    // --------------------
     // 6. 建立TableView欄位（字串型別）
-    //--------------------
+    // --------------------
     private TableColumn<Product, String> createColumn(String title, String propertyName) {
         TableColumn<Product, String> column = new TableColumn<>(title);
         column.setCellValueFactory(new PropertyValueFactory<>(propertyName));
@@ -201,44 +198,45 @@ public class AppProductMaintenance extends Application {
         return column;
     }
 
-    //--------------------
+    // --------------------
     // 7. 建立TableView欄位（整數型別）
-    //--------------------
-    private TableColumn<Product, Integer> createColumn(String title, String propertyName, IntegerStringConverter converter) {
+    // --------------------
+    private TableColumn<Product, Integer> createColumn(String title, String propertyName,
+            IntegerStringConverter converter) {
         TableColumn<Product, Integer> column = new TableColumn<>(title);
         column.setCellValueFactory(new PropertyValueFactory<>(propertyName));
         column.setCellFactory(TextFieldTableCell.forTableColumn(converter));
         return column;
     }
 
-    //--------------------
+    // --------------------
     // 8. 設定欄位編輯完成的事件處理
-    //--------------------
+    // --------------------
     /*
-    private <T> void setEditCommitHandler 方法說明：
-    - private：只有這個類別內部可以使用
-    - <T>：泛型型別參數，代表任何型別（String、Integer等）
-    - void：方法沒有回傳值
-    - setEditCommitHandler：方法名稱，用來設定欄位編輯完成後的處理
-    - TableColumn<Product, T> column：要設定的表格欄位，T代表欄位的資料型別
-    - String propertyName：Product物件中對應的屬性名稱
-
-    這個方法的用途是統一處理表格欄位編輯完成後要做的事情，
-    避免每個欄位都要重複寫相同的程式碼。
-
-    若不使用此方法，每個欄位都要分別設定，例如：
-    idColumn.setOnEditCommit(event -> {
-        Product product = event.getRowValue();
-        product.setProductId(event.getNewValue().toString());
-        System.out.println("productId updated: " + product);
-    });
-
-    nameColumn.setOnEditCommit(event -> {
-        Product product = event.getRowValue();
-        product.setName(event.getNewValue().toString());
-        System.out.println("name updated: " + product);
-    });
-    // 每個欄位都要重複寫類似的程式碼...
+     * private <T> void setEditCommitHandler 方法說明：
+     * - private：只有這個類別內部可以使用
+     * - <T>：泛型型別參數，代表任何型別（String、Integer等）
+     * - void：方法沒有回傳值
+     * - setEditCommitHandler：方法名稱，用來設定欄位編輯完成後的處理
+     * - TableColumn<Product, T> column：要設定的表格欄位，T代表欄位的資料型別
+     * - String propertyName：Product物件中對應的屬性名稱
+     * 
+     * 這個方法的用途是統一處理表格欄位編輯完成後要做的事情，
+     * 避免每個欄位都要重複寫相同的程式碼。
+     * 
+     * 若不使用此方法，每個欄位都要分別設定，例如：
+     * idColumn.setOnEditCommit(event -> {
+     * Product product = event.getRowValue();
+     * product.setProductId(event.getNewValue().toString());
+     * System.out.println("productId updated: " + product);
+     * });
+     * 
+     * nameColumn.setOnEditCommit(event -> {
+     * Product product = event.getRowValue();
+     * product.setName(event.getNewValue().toString());
+     * System.out.println("name updated: " + product);
+     * });
+     * // 每個欄位都要重複寫類似的程式碼...
      */
     private <T> void setEditCommitHandler(TableColumn<Product, T> column, String propertyName) {
         column.setOnEditCommit(event -> {
@@ -269,9 +267,9 @@ public class AppProductMaintenance extends Application {
         });
     }
 
-    //--------------------
+    // --------------------
     // 9. 初始化TableView與所有欄位、按鈕
-    //--------------------
+    // --------------------
     private TableView<Product> initializeProductTable() {
         TableView<Product> table = new TableView<>();
         table.setEditable(true);
@@ -308,7 +306,7 @@ public class AppProductMaintenance extends Application {
 
         return table;
     }
-    //--------------------
+    // --------------------
     // End of class
-    //--------------------
+    // --------------------
 }

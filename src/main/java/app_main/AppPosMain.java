@@ -1,6 +1,7 @@
 package app_main;
 
 import app_order_entry_system.AppOrderEntry;
+import db.ProductDAO;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,10 +18,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import tutorial_app_product_maintenance.AppProductMaintenance;
-
+import app_settings.AppSettings;
 
 public class AppPosMain extends Application {
-    
+
     private StackPane contentArea;
     private VBox sidebar;
     private boolean isSidebarExpanded = true;
@@ -30,7 +31,7 @@ public class AppPosMain extends Application {
         primaryStage.setTitle("宇軒早餐店 POS 系統");
 
         BorderPane mainLayout = new BorderPane();
-        
+
         // -------------------------
         // 上方工具列 (Top Bar) 設定
         // -------------------------
@@ -41,16 +42,16 @@ public class AppPosMain extends Application {
 
         // 漢堡選單按鈕 (Toggle Sidebar)
         Button toggleBtn = new Button("☰");
-        toggleBtn.setStyle("-fx-background-color: transparent; -fx-font-size: 22px; -fx-cursor: hand; -fx-text-fill: #333333;");
-        
-        
+        toggleBtn.setStyle(
+                "-fx-background-color: transparent; -fx-font-size: 22px; -fx-cursor: hand; -fx-text-fill: #333333;");
+
         Label headerTitle = new Label("  🍔宇軒早餐店 POS");
         headerTitle.getStyleClass().add("header-title");
 
         headerTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
 
         headerTitle.setTextFill(Color.web("#333333"));
-        
+
         topBar.getChildren().addAll(toggleBtn, headerTitle);
 
         // -------------------------
@@ -59,7 +60,7 @@ public class AppPosMain extends Application {
         sidebar = new VBox();
         sidebar.setPrefWidth(220);
         sidebar.setStyle("-fx-background-color: #252526;"); // 專業低調的深灰色
-        
+
         // 側邊欄標題
         Label appTitle = new Label("選單 MENU");
         appTitle.setTextFill(Color.web("#aaaaaa"));
@@ -117,24 +118,60 @@ public class AppPosMain extends Application {
 
         btnReport.setOnAction(e -> {
             setActiveButton(btnReport);
-            switchView(createPlaceholder("營業報表系統 (建置中)"));
+
+            ProductDAO dao = new ProductDAO();
+
+            int productCount = dao.getAllProducts().size();
+            int totalSales = dao.getTotalSalesAmount();
+
+            VBox reportPane = new VBox(20);
+            reportPane.setAlignment(Pos.CENTER);
+
+            Label title = new Label("營業報表");
+            title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+
+            Label lblProductCount = new Label("商品總數：" + productCount);
+            Label lblSales = new Label("累積銷售總額：$" + totalSales);
+            int breakfastCount = dao.getProductsByCategory("早餐").size();
+            int drinkCount = dao.getProductsByCategory("飲料").size();
+
+            Label lblBreakfast = new Label("早餐商品：" + breakfastCount);
+            Label lblDrink = new Label("飲料商品：" + drinkCount);
+
+            Label lblDB = new Label("資料庫狀態：正常");
+
+            reportPane.getChildren().addAll(
+                    title,
+                    lblProductCount,
+                    lblBreakfast,
+                    lblDrink,
+                    lblSales,
+                    lblDB);
+
+            switchView(reportPane);
         });
 
         btnSettings.setOnAction(e -> {
             setActiveButton(btnSettings);
-            switchView(createPlaceholder("系統設定 (建置中)"));
+
+            try {
+                AppSettings settings = new AppSettings();
+                switchView(settings.getRootPane());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         });
 
         // 將按鈕加入側邊欄
         sidebar.getChildren().addAll(btnOrderEntry, btnProductMgt, btnReport, btnSettings);
-        
+
         // 設定主畫面佈局
         mainLayout.setTop(topBar); // 放置上方工具列包含漢堡按鈕
         mainLayout.setLeft(sidebar);
         mainLayout.setCenter(contentArea);
 
         // 預設進入點餐系統畫面
-        btnOrderEntry.fire(); 
+        btnOrderEntry.fire();
 
         Scene scene = new Scene(mainLayout, 1024, 768);
         primaryStage.setScene(scene);
@@ -148,22 +185,25 @@ public class AppPosMain extends Application {
     private Button createNavButton(String text) {
         Button btn = new Button(text);
         btn.setMaxWidth(Double.MAX_VALUE);
-        btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #cccccc; -fx-font-size: 16px; -fx-alignment: center-left; -fx-padding: 15 20 15 20;");
-        
+        btn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #cccccc; -fx-font-size: 16px; -fx-alignment: center-left; -fx-padding: 15 20 15 20;");
+
         // 滑鼠懸停效果 (Hover)
         btn.setOnMouseEntered(e -> {
             if (!btn.getStyleClass().contains("active")) {
-                btn.setStyle("-fx-background-color: #3e3e42; -fx-text-fill: #ffffff; -fx-font-size: 16px; -fx-alignment: center-left; -fx-padding: 15 20 15 20;");
+                btn.setStyle(
+                        "-fx-background-color: #3e3e42; -fx-text-fill: #ffffff; -fx-font-size: 16px; -fx-alignment: center-left; -fx-padding: 15 20 15 20;");
             }
         });
-        
+
         // 滑鼠移開效果
         btn.setOnMouseExited(e -> {
             if (!btn.getStyleClass().contains("active")) {
-                btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #cccccc; -fx-font-size: 16px; -fx-alignment: center-left; -fx-padding: 15 20 15 20;");
+                btn.setStyle(
+                        "-fx-background-color: transparent; -fx-text-fill: #cccccc; -fx-font-size: 16px; -fx-alignment: center-left; -fx-padding: 15 20 15 20;");
             }
         });
-        
+
         return btn;
     }
 
@@ -176,12 +216,14 @@ public class AppPosMain extends Application {
             if (node instanceof Button) {
                 Button btn = (Button) node;
                 btn.getStyleClass().remove("active");
-                btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #cccccc; -fx-font-size: 16px; -fx-alignment: center-left; -fx-padding: 15 20 15 20;");
+                btn.setStyle(
+                        "-fx-background-color: transparent; -fx-text-fill: #cccccc; -fx-font-size: 16px; -fx-alignment: center-left; -fx-padding: 15 20 15 20;");
             }
         }
         // 反白目前點選的按鈕 (使用專業的藍色 highlight)
         activeBtn.getStyleClass().add("active");
-        activeBtn.setStyle("-fx-background-color: #007acc; -fx-text-fill: #ffffff; -fx-font-size: 16px; -fx-alignment: center-left; -fx-padding: 15 20 15 20;");
+        activeBtn.setStyle(
+                "-fx-background-color: #007acc; -fx-text-fill: #ffffff; -fx-font-size: 16px; -fx-alignment: center-left; -fx-padding: 15 20 15 20;");
     }
 
     /**
